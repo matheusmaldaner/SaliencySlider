@@ -20,12 +20,12 @@ To use SaliencySlider, visit the deployed web application or experiment with the
 For a detailed explanation of the project, methodologies, and results, refer to our final report:
 
 - [Read the Final Report](./SaliencySlider_Report.pdf)
-- 
+
 ## Deployment
 
 The SaliencySlider web application is deployed using Django and hosted on pythonanywhere, ensuring consistent availability and performance.
 
-## Credits
+## Contributors
 
 * Matheus Kunzler Maldaner
 
