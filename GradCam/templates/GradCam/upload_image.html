@@ -1,0 +1,13 @@
+{% extends "GradCam/base_generic.html" %}
+{% block content %}
+    <h2>Upload an Image</h2>
+    <form action="{% url 'GradCam:user_image' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="image" id="image" required  accept="image/png, image/jpeg, image/jpg">
+        <button type="submit">Upload</button>
+    </form>
+    {% if uploaded_image_url %}
+        <p>Image uploaded successfully!</p>
+        <img src="{{ uploaded_image_url }}" alt="Uploaded Image">
+    {% endif %}
+{% endblock %}

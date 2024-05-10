@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 80%; /* Adjust width to fit content better */
+            max-width: 600px; /* Limit the maximum width */
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 20px;
+            color: #555;
+            font-size: 18px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+        }
+        img {
+            max-width: 100%; /* Ensures the image does not exceed the container width */
+            height: auto;
+            border-radius: 8px; /* Optional: adds rounded corners to the image */
+        }
+        p#predicted-class {
+            color: #666;
+            font-size: 20px;
+            margin-top: 20px; /* Adjust spacing as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to Saliency Slider</h1>
+        <label for="intensity-slider">Feature Saliency Percentage: <span id="intensity-value">0</span>%</label>
+        <input type="range" id="intensity-slider" min="0" max="100" value="0" step="1">
+        <img id="image-display" src="{{ last_image.image.url }}" alt="Processed Image">
+        <p id="predicted-class">Predicted Class: <span id="class-label">N/A</span></p>
+        
+        <script>
+            const intensitySlider = document.getElementById('intensity-slider');
+            const intensityValueDisplay = document.getElementById('intensity-value');
+            const imageDisplay = document.getElementById('image-display');
+            const classLabelDisplay = document.getElementById('class-label');
+            const originalImageUrl = imageDisplay.src;  // Store the original image URL
+        
+            intensitySlider.addEventListener('input', function() {
+                intensityValueDisplay.textContent = this.value;
+                
+                fetch('{% url "GradCam:update_image" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ intensity: this.value, image_path: originalImageUrl })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image_data_url && 'predicted_class' in data) {
+                        // Update the displayed image src with the new base64 data URL
+                        imageDisplay.src = data.image_data_url;
+                        classLabelDisplay.textContent = data.predicted_class; // Update the predicted class label
+                    } else {
+                        console.error('Error:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        </script>
+    </div>
+</body>
+</html>
