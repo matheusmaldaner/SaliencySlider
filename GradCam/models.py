@@ -10,7 +10,7 @@ class UserImage(models.Model):
     
 '''
 # we now need to tell the overall program that this app (gradcam) exists
-# go to SaliencySlider/settings.py and add "GradCam.apps.GradcamConfig" under INSTALLED_APPS
+# go to saliencyslider/settings.py and add "GradCam.apps.GradcamConfig" under INSTALLED_APPS
 # we then execute $python manage.py makemigrations GradCam
 # $python manage.py migrate  basically syncs up and applies any unapplied changes
 

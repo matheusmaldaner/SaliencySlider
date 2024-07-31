@@ -13,6 +13,9 @@ from .models import UserImage
 from .forms import UserImageForm
 from .image_processor import process_image
 
+def home(request):
+    return render(request, 'GradCam/gradcam_home.html')
+
 def index(request):
     return render(request, 'GradCam/index.html')
 

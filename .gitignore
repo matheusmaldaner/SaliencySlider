@@ -1,0 +1,24 @@
+# Python compiled files
+GradCam/_pycache__/
+*.pyc
+
+# Virtual environment
+saliency_env/
+
+# Environment variables
+.env
+
+# Database file
+db.sqlite3
+
+# IDE settings
+.vscode/
+.idea/
+*.swp
+
+# Django collected static files
+collected_static/
+
+# Operating system files
+.DS_Store
+Thumbs.db

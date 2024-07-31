@@ -8,7 +8,8 @@ from . import views
 app_name = "GradCam"
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    path("", views.home, name="home"),
+    path("GradCam/", views.index, name="index"),
     path("display_image/", views.display_image, name="display_image"),
     path("user_image/", views.user_image, name="user_image"),
     path("success/", views.success, name='success'),
