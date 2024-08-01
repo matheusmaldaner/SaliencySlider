@@ -4,6 +4,7 @@ GradCam/_pycache__/
 
 # Virtual environment
 saliency_env/
+changes.patch
 
 # Environment variables
 .env
