@@ -32,3 +32,5 @@ The SaliencySlider web application is deployed using Django and hosted on python
 * Kian Ambrose
 
 * Lexie Certo
+
+* Kristian O'Connor
