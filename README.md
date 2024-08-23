@@ -25,6 +25,8 @@ For a detailed explanation of the project, methodologies, and results, refer to 
 
 The SaliencySlider web application is deployed using Django and hosted on pythonanywhere, ensuring consistent availability and performance.
 
+We are currently working on transfering the deployment of the application to be hosted using Docker on Amazon Lightsail Container.
+
 ## Contributors
 
 * Matheus Kunzler Maldaner
