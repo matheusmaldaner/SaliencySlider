@@ -21,6 +21,8 @@ For a detailed explanation of the project, methodologies, and results, refer to 
 
 - [Read the Final Report](./SaliencySlider_Report.pdf)
 
+We are currently working on further development and tests for SaliencySlider, exploring the potential direction of conducting a user study to gauge the usability and usefulness of our application.
+
 ## Deployment
 
 The SaliencySlider web application is deployed using Django and hosted on pythonanywhere, ensuring consistent availability and performance.
