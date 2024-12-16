@@ -17,7 +17,7 @@ urlpatterns = [
     path('last_image/', views.display_last_image, name="last_image"),
     path('update_image/', views.update_image, name='update_image'),
 ]
- 
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)

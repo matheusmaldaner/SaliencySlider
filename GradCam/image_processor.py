@@ -12,96 +12,66 @@ from PIL import Image, ImageFilter
 from tf_keras_vis.gradcam import Gradcam
 from tf_keras_vis.utils import normalize
 from tf_keras_vis.utils.scores import CategoricalScore
+from django.conf import settings
+import os
 
-# initializes global model
+
 global_model = VGG19(weights='imagenet')
 global_model.layers[-1].activation = tf.keras.activations.linear
 model = utils.apply_modifications(global_model)
 
-# loads class index
+
 url = "https://raw.githubusercontent.com/raghakot/keras-vis/master/resources/imagenet_class_index.json"
 response = requests.get(url)
 CLASS_INDEX = response.json()
 
-# initializes Gradcam with modified model
+
 gradcam = Gradcam(model, clone=False)
 
-def process_image(image_url, intensity):
+def process_image(image_path, intensity):
+    # Now image_path should be something like 'user_images/20Ounce_NYAS-Apples2.png'
+    full_image_path = os.path.join(settings.MEDIA_ROOT, image_path)
+    print(f"Loading image from path: {full_image_path}")
 
-    # fetches image from URL
-    response = requests.get(image_url)  
+    try:
+        img = Image.open(full_image_path)
+        original_size = img.size  
+        img_copy = img.resize((224, 224)).convert('RGB')
 
-    # saves unaltered copy for display
-    img_copy = Image.open(io.BytesIO(response.content))  
-    img_copy = img_copy.resize((224, 224))
+        img_array = img_to_array(img_copy)
+        img_array = np.expand_dims(img_array, axis=0)
+        img_array = preprocess_input(img_array)
 
-    img = Image.open(io.BytesIO(response.content))  # opens image from a bytes buffer
-    # convert it to RGB
-    if img.mode != 'RGB':
-        img = img.convert('RGB')
-        img_copy = img_copy.convert('RGB')
-    img = img.resize((224, 224))
-    img_array = img_to_array(img)
+        predictions = global_model.predict(img_array)
+        top_pred = np.argmax(predictions[0])
 
-    
-    img_array = np.expand_dims(img_array, axis=0)  # Make 'batch' of 1
-    img_array = preprocess_input(img_array)
+        classlabel = [CLASS_INDEX[str(i)][1] for i in range(len(CLASS_INDEX))]
 
-    # Predictions
-    predictions = global_model.predict(img_array) 
-    top_pred = np.argmax(predictions[0]) # can change to retrieve more predictions like 1-5
-    
-    classlabel = []
-    for i_dict in range(len(CLASS_INDEX)):
-        classlabel.append(CLASS_INDEX[str(i_dict)][1])
+        score = CategoricalScore([top_pred])
+        cam = gradcam(score, img_array, penultimate_layer=-1)
+        cam = normalize(cam)
 
-    # predicts top X classes predicted
-    class_idxs_sorted1 = np.argsort(predictions.flatten())[::-1]
-    X = 5
+        heatmap_resized = np.uint8(cm.jet(cam[0])[..., :3] * 255)
+        heatmap_resized = Image.fromarray(heatmap_resized).resize(original_size, Image.LANCZOS)
 
-    # can modify this part to retrieve X number of top classes rather than just the top pred
-    for i, idx in enumerate(class_idxs_sorted1[:X]):
-        print("Top {} predicted class:     Pr(Class={:18} [index={}])={:5.3f}".format(
-            + 1,classlabel[idx],idx,predictions[0,idx]))
-    
-        # stores index and classification of highest prediction
-        if i == 0:
-            highest_pred_idx = idx
-            highest_pred_label = classlabel[idx]    
-    
-    # GradCam stuff -- might be beneficial to take it out of this function somehow
-    score = CategoricalScore([highest_pred_idx])
-    input_images = preprocess_input(img_array)
+        img_original = img.convert("RGBA")
+        heatmap_resized = heatmap_resized.convert("RGBA")
 
-    # generates heatmap with GradCAM and resizes to match image dims
-    cam = gradcam(score, input_images, penultimate_layer=-1)
-    # heatmap = np.uint8(cm.jet(cam[0])[..., :3] * 255)
-    # heatmap_img = Image.fromarray(heatmap)
-    # heatmap_img = heatmap_img.resize(img.size, Image.LANCZOS).convert('RGBA')
+        intensity = max(0, min(100, intensity))
+        alpha = intensity / 100.0
 
-    # X percent of features the model considers the most important
-    PERCENTAGE_IMPORTANCE = intensity
-    threshold_value = np.percentile(cam[0], 100-PERCENTAGE_IMPORTANCE)
+        blended_img = Image.blend(img_original, heatmap_resized, alpha=alpha).convert("RGB")
 
-    # 2d and 3d masks
-    mask = cam[0] > threshold_value
-    mask3d = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
+        buffer = io.BytesIO()
+        blended_img.save(buffer, format="JPEG")
+        image_data = buffer.getvalue()
+        image_data_url = "data:image/jpeg;base64," + base64.b64encode(image_data).decode('utf-8')
+        print(f"Generated image_data_url (truncated): {image_data_url[:100]}...")
+        return image_data_url, classlabel[top_pred]
 
-    # applies mask to original image to show important regions
-    importance_img = img_copy * mask3d
-    importance_img = Image.fromarray(importance_img)
-    if importance_img.mode != 'RGB':
-        importance_img = importance_img.convert('RGB')    
-
-    # converts the processed image to a data URL
-    buffer = io.BytesIO()
-    importance_img.save(buffer, format="JPEG")  # Save image to the buffer in JPEG format
-    image_data = buffer.getvalue()
-    image_data_url = "data:image/jpeg;base64," + base64.b64encode(image_data).decode('utf-8')
-
-    return image_data_url, highest_pred_label
-
-
+    except Exception as e:
+        print(f"Error processing the image: {e}")
+        return None, "Error processing the image"
 
 # def process_image(image_url, intensity):
 #     # Load model

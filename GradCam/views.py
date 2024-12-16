@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from .models import UserImage
 from .forms import UserImageForm
 from .image_processor import process_image
+import os
 
 def home(request):
     return render(request, 'GradCam/gradcam_home.html')
@@ -66,18 +67,37 @@ def update_image(request):
             intensity = data.get('intensity', 0)
             image_path = data.get('image_path', '')
 
+            # If the image_path is a full URL, convert it to a relative path
+            # For example: 
+            # "http://0.0.0.0:8000/media/user_images/20Ounce_NYAS-Apples2.png" 
+            # should become "user_images/20Ounce_NYAS-Apples2.png"
+            if image_path.startswith('http://0.0.0.0:8000/media/'):
+                image_path = image_path.replace('http://0.0.0.0:8000/media/', '')
+
+            if image_path.startswith('http://localhost:8000/media/'):
+                image_path = image_path.replace('http://localhost:8000/media/', '')
+
             if not image_path:
                 return JsonResponse({'error': 'Image path is empty'}, status=400)
 
+            print(f"Processing image: {image_path}, with intensity: {intensity}")
+
             image_data_url, highest_pred_label = process_image(image_path, int(intensity))
+            if not image_data_url:
+                return JsonResponse({'error': 'Image processing failed'}, status=500)
+
+            print(f"Processed image, predicted class: {highest_pred_label}")
             return JsonResponse({
-                'image_data_url': image_data_url,      # return the modified image
-                'predicted_class': highest_pred_label  # return the predicted class
+                'image_data_url': image_data_url,
+                'predicted_class': highest_pred_label
             })
         else:
             return JsonResponse({'error': 'Invalid request'}, status=400)
     except Exception as e:
+        print(f"Error processing image: {e}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
         
 # # Create your views here.
 # def index(request):
@@ -118,4 +138,3 @@ def update_image(request):
 #         # with POST data. This prevents data from being posted twice if a
 #         # user hits the Back button.
 #         return HttpResponseRedirect(reverse("GardCam:results", args=(question.id,)))  
-

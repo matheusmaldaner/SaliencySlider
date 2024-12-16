@@ -126,5 +126,5 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # for server path to store files in the computer
+MEDIA_ROOT = '/code/media' # for server path to store files in the computer
 MEDIA_URL = '/media/' # reference URL for browser to access files over Http

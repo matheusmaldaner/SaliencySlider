@@ -1,28 +1,36 @@
-# Use an official Python runtime as a parent image 
-FROM python:3.10-slim 
+# Use Python 3.10-slim as the base image
+FROM python:3.10-slim
 
-# Set environment varibles 
-ENV PYTHONDONTWRITEBYTECODE=1 
-ENV PYTHONUNBUFFERED=1 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    patch \
-    && rm -rf /var/lib/apt/lists/*
+# Set working directory
+WORKDIR /code
 
-# Set work directory 
-WORKDIR /code 
+# Install build tools and pkg-config for h5py and patching
+RUN apt-get update && \
+    apt-get install -y build-essential gcc libhdf5-dev python3-dev pkg-config && \
+    rm -rf /var/lib/apt/lists/*
 
-#Install dependencies 
-COPY requirements.txt /code/ 
-RUN pip install --upgrade pip && pip install -r requirements.txt 
+# Install Python dependencies
+COPY requirements.txt /code/
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy project 
-COPY . /code/ 
+# Apply fix for collections.Iterable deprecation
+RUN sed -i 's/from collections import Iterable/from collections.abc import Iterable/' /usr/local/lib/python3.10/site-packages/vis/utils/utils.py
 
-# Copy and apply the patch to the library in site-packages
-COPY changes.patch /tmp/changes.patch
-RUN patch /usr/local/lib/python3.10/site-packages/vis/utils/utils.py < /tmp/changes.patch
+# Copy project files
+COPY . /code/
 
-# Run the application 
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "saliencyslider.wsgi:application"]
+# **Generate migrations**
+RUN python manage.py makemigrations --no-input
+
+# **Apply migrations**
+RUN python manage.py migrate --no-input
+
+# Expose the correct port
+EXPOSE 8000
+
+# Command to run your application
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "saliencyslider.wsgi:application"]
