@@ -1,0 +1,11 @@
+--- saliency_env/Lib/site-packages/vis/utils/utils_old.py	2024-07-15 17:27:08.473528200 -0400
++++ saliency_env/Lib/site-packages/vis/utils/utils.py	2024-07-15 16:04:51.220876900 -0400
+@@ -12,7 +12,7 @@
+ from .. import backend
+ 
+ from skimage import io, transform
+-from collections import Iterable
++from collections.abc import Iterable
+ from keras import backend as K
+ from keras.models import load_model
+ 
