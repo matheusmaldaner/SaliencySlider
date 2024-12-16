@@ -52,21 +52,35 @@
 <body>
     <div class="container">
         <h1>Welcome to Saliency Slider</h1>
+        
+        <label for="method-select">Select Method:</label>
+        <select id="method-select">
+            <option value="gradcam" selected>GradCAM</option>
+            <option value="activation-maximization">Activation Maximization</option>
+            <option value="integrated-gradients">Integrated Gradients</option>
+        </select>
+        
         <label for="intensity-slider">Feature Saliency Percentage: <span id="intensity-value">0</span>%</label>
         <input type="range" id="intensity-slider" min="0" max="100" value="0" step="1">
+        
         <img id="image-display" src="{{ last_image.image.url }}" alt="Processed Image">
         <p id="predicted-class">Predicted Class: <span id="class-label">N/A</span></p>
         
         <script>
             const intensitySlider = document.getElementById('intensity-slider');
             const intensityValueDisplay = document.getElementById('intensity-value');
+            const methodSelect = document.getElementById('method-select');
             const imageDisplay = document.getElementById('image-display');
             const classLabelDisplay = document.getElementById('class-label');
-            const originalImageUrl = imageDisplay.src;  // Store the original image URL
-        
-            intensitySlider.addEventListener('input', function() {
-                intensityValueDisplay.textContent = this.value;
-                
+            const originalImageUrl = imageDisplay.src; // Store the original image URL
+
+            // Function to send a request to update the image
+            function updateImage() {
+                const intensity = intensitySlider.value; // Get the intensity value
+                const method = methodSelect.value; // Get the selected method
+
+                intensityValueDisplay.textContent = intensity;
+
                 fetch('{% url "GradCam:update_image" %}', {
                     method: 'POST',
                     headers: {
@@ -74,20 +88,28 @@
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({ intensity: this.value, image_path: originalImageUrl })
+                    body: JSON.stringify({
+                        intensity: intensity,
+                        method: method,
+                        image_path: originalImageUrl
+                    })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.image_data_url && 'predicted_class' in data) {
-                        // Update the displayed image src with the new base64 data URL
+                        // Update the displayed image
                         imageDisplay.src = data.image_data_url;
-                        classLabelDisplay.textContent = data.predicted_class; // Update the predicted class label
+                        classLabelDisplay.textContent = data.predicted_class;
                     } else {
                         console.error('Error:', data.error);
                     }
                 })
                 .catch(error => console.error('Error:', error));
-            });
+            }
+
+            // Attach event listeners
+            intensitySlider.addEventListener('input', updateImage);
+            methodSelect.addEventListener('change', updateImage);
         </script>
     </div>
 </body>

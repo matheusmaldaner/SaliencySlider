@@ -11,8 +11,12 @@ from django.http import JsonResponse
 
 from .models import UserImage
 from .forms import UserImageForm
-from .image_processor import process_image
 import os
+
+from .image_processor.gradcam_processor import process_image_gradcam
+from .image_processor.activation_maximization_processor import process_image_activation_maximization
+from .image_processor.integrated_gradients_processor import process_image_integrated_gradients
+
 
 def home(request):
     return render(request, 'GradCam/gradcam_home.html')
@@ -66,11 +70,8 @@ def update_image(request):
             data = json.loads(request.body)
             intensity = data.get('intensity', 0)
             image_path = data.get('image_path', '')
+            method = data.get('method', 'gradcam')  # default to gradcam if not provided
 
-            # If the image_path is a full URL, convert it to a relative path
-            # For example: 
-            # "http://0.0.0.0:8000/media/user_images/20Ounce_NYAS-Apples2.png" 
-            # should become "user_images/20Ounce_NYAS-Apples2.png"
             if image_path.startswith('http://0.0.0.0:8000/media/'):
                 image_path = image_path.replace('http://0.0.0.0:8000/media/', '')
 
@@ -80,9 +81,17 @@ def update_image(request):
             if not image_path:
                 return JsonResponse({'error': 'Image path is empty'}, status=400)
 
-            print(f"Processing image: {image_path}, with intensity: {intensity}")
+            print(f"Processing image: {image_path}, with intensity: {intensity}, method: {method}")
 
-            image_data_url, highest_pred_label = process_image(image_path, int(intensity))
+            if method == "gradcam":
+                image_data_url, highest_pred_label = process_image_gradcam(image_path, int(intensity))
+            elif method == "activation-maximization":
+                image_data_url, highest_pred_label = process_image_activation_maximization(image_path, int(intensity))
+            elif method == "integrated-gradients":
+                image_data_url, highest_pred_label = process_image_integrated_gradients(image_path, int(intensity))
+            else:
+                return JsonResponse({'error': 'Invalid method'}, status=400)
+
             if not image_data_url:
                 return JsonResponse({'error': 'Image processing failed'}, status=500)
 
@@ -97,44 +106,3 @@ def update_image(request):
         print(f"Error processing image: {e}")
         return JsonResponse({'error': str(e)}, status=500)
 
-
-        
-# # Create your views here.
-# def index(request):
-#     latest_question_list = Question.objects.order_by("-pub_date")[:5]
-#     # now we can use the html template we created
-#     context = {"latest_question_list": latest_question_list}
-#     return render(request, "GradCam/index.html", context) # returns HttpResponse object
-
-# # slightly different because it takes an argument
-# def detail(request, question_id):
-#     # raises Http404 if object is not found
-#     question = get_object_or_404(Question, pk=question_id) # could be get_list_or_404 to check for empty list
-#     return render(request, "GradCam/detail.html", {"question": question})
-
-# def results(request, question_id):
-#     response = "You're looking at the results of question %s."
-#     return HttpResponse(response % question_id)
-
-# def vote(request, question_id):
-#     question = get_object_or_404(Question, pk=question_id)
-#     try:
-#         selected_choice = question.choice_set.get(pk=request.POST["choice"]) # request.POST values r always strings
-#     except (KeyError, Choice.DoesNotExist):
-#         # Redisplay the question voting form.
-#         return render(
-#             request,
-#             "GradCam/detail.html",
-#             {
-#                 "question": question,
-#                 "error_message": "You didn't select a choice.",
-#             },
-#         )
-#     else:
-#         selected_choice.votes = F("votes") + 1
-#         selected_choice.save()
-        
-#         # Always return an HttpResponseRedirect after successfully dealing
-#         # with POST data. This prevents data from being posted twice if a
-#         # user hits the Back button.
-#         return HttpResponseRedirect(reverse("GardCam:results", args=(question.id,)))  

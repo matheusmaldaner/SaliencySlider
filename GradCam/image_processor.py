@@ -28,7 +28,7 @@ CLASS_INDEX = response.json()
 
 gradcam = Gradcam(model, clone=False)
 
-def process_image(image_path, intensity):
+def process_image_gradcam(image_path, intensity):
     # Now image_path should be something like 'user_images/20Ounce_NYAS-Apples2.png'
     full_image_path = os.path.join(settings.MEDIA_ROOT, image_path)
     print(f"Loading image from path: {full_image_path}")
@@ -73,37 +73,3 @@ def process_image(image_path, intensity):
         print(f"Error processing the image: {e}")
         return None, "Error processing the image"
 
-# def process_image(image_url, intensity):
-#     # Load model
-#     model = VGG19(weights='imagenet')
-#     model.summary()  # For debugging, to see model layers
-
-#     # Fetch image from URL and preprocess
-#     response = requests.get(image_url)
-#     img = Image.open(io.BytesIO(response.content))
-#     img = img.resize((224, 224))  # Resize for the model input
-#     img_array = img_to_array(img)  # Convert to array
-#     img_array = np.expand_dims(img_array, axis=0)  # Make 'batch' of 1
-#     img_array = preprocess_input(img_array)  # Preprocess the input
-
-#     # Predictions
-#     predictions = model.predict(img_array)
-#     top_pred = np.argmax(predictions[0])
-
-#     # GradCAM
-#     gradcam = Gradcam(model, model_modifier=None, clone=False)
-#     # Generate heatmap with GradCAM
-#     cam = gradcam(top_pred, img_array, penultimate_layer=-1)  # Use appropriate layer
-#     heatmap = np.uint8(cm.jet(cam[0])[..., :3] * 255)  # Get heatmap
-
-#     # Merge heatmap with original image
-#     heatmap = Image.fromarray(heatmap)
-#     merged_img = Image.blend(img.convert("RGBA"), heatmap.convert("RGBA"), alpha=0.5)
-    
-#     # Convert to data URL
-#     buffer = io.BytesIO()
-#     merged_img.save(buffer, format="JPEG")
-#     image_data = buffer.getvalue()
-#     image_data_url = "data:image/jpeg;base64," + base64.b64encode(image_data).decode('utf-8')
-
-#     return image_data_url
