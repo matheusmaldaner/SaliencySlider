@@ -8,7 +8,8 @@ from . import views
 app_name = "GradCam"
 
 urlpatterns = [
-    path("", views.home, name="home"),
+    path("", views.gradcam_landing, name="gradcam_landing"),
+    path("home", views.home, name="gradcam_home"),
     path("GradCam/", views.index, name="index"),
     path("display_image/", views.display_image, name="display_image"),
     path("user_image/", views.user_image, name="user_image"),
@@ -21,3 +22,5 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL,
                           document_root=settings.MEDIA_ROOT)
+
+

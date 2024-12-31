@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cube Zoom Example</title>
+<style>
+/* Global Styles */
+body {
+  margin: 0;
+  height: 100vh;
+  background: #fff; /* Clean white background */
+  color: #000; /* Black text for contrast */
+  font-family: "DIN Alternate", sans-serif;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Instruction or tagline */
+p {
+  margin-bottom: 1rem;
+  color: #555; /* Subtle gray for less distraction */
+}
+
+/* Cube Container */
+#cube-container {
+  box-sizing: border-box;
+  transform-style: preserve-3d;
+  position: relative;
+  width: 250px;
+  height: 250px;
+  transition: 2s cubic-bezier(.68,-0.55,.27,1.55); /* Smooth ease for hover and click */
+}
+
+/* Cube Faces */
+#cube-container .face {
+  width: 250px;
+  height: 250px;
+  position: absolute;
+  border: 2px solid #ed3403; /* Red edges */
+  background: rgba(237, 52, 3, 0.2); /* Transparent red background */
+  box-shadow: 0px 0px 150px #ed3403; /* Red glow */
+}
+
+/* Positioning faces */
+.face.top {
+  transform: rotateX(90deg);
+  margin-top: -50%;
+}
+.face.right {
+  transform: rotateY(90deg);
+  margin-left: 50%;
+}
+.face.left {
+  transform: rotateY(-90deg);
+  margin-left: -50%;
+}
+.face.bottom {
+  transform: rotateX(90deg);
+  margin-top: 50%;
+}
+.face.back {
+  transform: translateZ(125px);
+}
+.face.front {
+  transform: translateZ(-125px);
+}
+
+/* Hover Rotation */
+#cube-container:hover {
+  transform: rotateX(-25deg) rotateY(-40deg);
+  transition: 2s cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+/* Click Zoom In */
+#cube-container.clicked {
+  transform: rotateX(-25deg) rotateY(-40deg) scale(2); /* Zoom in */
+  transition: 2s cubic-bezier(.68,-0.55,.27,1.55);
+}
+
+/* Inside Content Overlay */
+#inside-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff; /* White background for the "home page" */
+  color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  opacity: 0; /* Hidden initially */
+  pointer-events: none; /* Non-interactive when hidden */
+  transition: opacity 1s ease;
+}
+
+#inside-content.show {
+  opacity: 1; /* Fade in on click */
+  pointer-events: auto;
+}
+</style>
+</head>
+<body>
+
+<div id="cube-container">
+  <div class="face top"></div>
+  <div class="face right"></div>
+  <div class="face bottom"></div>
+  <div class="face left"></div>
+  <div class="face back"></div>
+  <div class="face front"></div>
+</div>
+
+<!-- Hidden content that fades in after zoom -->
+<div id="inside-content">
+  <h1>Welcome to GradCam Home!</h1>
+</div>
+
+<script>
+const cube = document.getElementById('cube-container');
+const insideContent = document.getElementById('inside-content');
+let clicked = false;
+
+// Handle click to zoom in and fade in content
+cube.addEventListener('click', () => {
+  if (clicked) return; // Prevent multiple clicks
+  clicked = true;
+
+  // Add the zoom-in class
+  cube.classList.add('clicked');
+
+  // Show inside content after the animation
+  setTimeout(() => {
+    window.location.href = "{% url 'GradCam:gradcam_home' %}";
+  }, 2000); // Match the transition duration (2s)
+});
+</script>
+
+</body>
+</html>

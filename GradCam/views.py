@@ -21,6 +21,9 @@ from .image_processor.integrated_gradients_processor import process_image_integr
 def home(request):
     return render(request, 'GradCam/gradcam_home.html')
 
+def gradcam_landing(request):
+    return render(request, 'GradCam/gradcam_landing.html')
+
 def index(request):
     return render(request, 'GradCam/index.html')
 
