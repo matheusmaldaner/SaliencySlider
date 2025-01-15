@@ -16,6 +16,9 @@ import os
 from .image_processor.gradcam_processor import process_image_gradcam
 from .image_processor.activation_maximization_processor import process_image_activation_maximization
 from .image_processor.integrated_gradients_processor import process_image_integrated_gradients
+from .image_processor.vanilla_gradients_processor import process_image_vanilla_gradients
+from .image_processor.scorecam_processor import process_image_scorecam
+from .image_processor.gradcamPP_processor import process_image_gradcamPP
 
 
 def home(request):
@@ -92,6 +95,12 @@ def update_image(request):
                 image_data_url, highest_pred_label = process_image_activation_maximization(image_path, int(intensity))
             elif method == "integrated-gradients":
                 image_data_url, highest_pred_label = process_image_integrated_gradients(image_path, int(intensity))
+            elif method == "vanilla-gradients":
+                image_data_url, highest_pred_label = process_image_vanilla_gradients(image_path, int(intensity))
+            elif method == "score-cam":
+                image_data_url, highest_pred_label = process_image_scorecam(image_path, int(intensity))
+            elif method == "gradcamPP":
+                image_data_url, highest_pred_label = process_image_gradcamPP(image_path, int(intensity))
             else:
                 return JsonResponse({'error': 'Invalid method'}, status=400)
 

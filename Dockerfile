@@ -17,9 +17,6 @@ RUN apt-get update && \
 COPY requirements.txt /code/
 RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Apply fix for collections.Iterable deprecation
-RUN sed -i 's/from collections import Iterable/from collections.abc import Iterable/' /usr/local/lib/python3.10/site-packages/vis/utils/utils.py
-
 # Copy project files
 COPY . /code/
 
