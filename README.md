@@ -29,9 +29,12 @@ The SaliencySlider web application is deployed using Django and hosted on python
 
 We are currently working on transfering the deployment of the application to be hosted using Docker on Amazon Lightsail Container.
 
-# Docker build command: docker build -t saliency-slider-app .
-# Docker run command: docker run -d -p 8000:8000 saliency-slider-app
-# Make sure Docker Daemon is running
+### Docker:
+Make sure Docker Daemon is running
+Build command:
+`docker build -t saliency-slider-app`
+Run command: 
+`docker run -d -p 8000:8000 saliency-slider-app`
 
 
 ## Contributors
