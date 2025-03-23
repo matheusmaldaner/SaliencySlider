@@ -1,0 +1,383 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saliency Models Comparison</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin: 1.5rem;
+            width: 95%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 0.75rem;
+        }
+
+        .original-image {
+            margin-bottom: 1.5rem;
+            max-width: 200px;
+            display: inline-block;
+        }
+
+        .original-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .grid-item h3 {
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            color: #333;
+            text-transform: capitalize;
+            font-size: 1rem;
+        }
+
+        .image-container {
+            width: 100%;
+            max-width: 300px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .predictions-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .predictions-title {
+            margin-top: 0;
+            color: #495057;
+            font-size: 18px;
+            margin-bottom: 0.75rem;
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            justify-items: center;
+        }
+
+        .prediction-item {
+            padding: 0.5rem;
+            background-color: white;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            width: 100%;
+            font-size: 0.9rem;
+        }
+
+        .prediction-method {
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 0.25rem;
+            text-transform: capitalize;
+        }
+
+        .prediction-class {
+            color: #28a745;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 8px 15px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+
+        .explore-button {
+            display: inline-block;
+            margin-top: 1rem;
+            margin-left: 0.5rem;
+            padding: 8px 15px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .explore-button:hover {
+            background-color: #0056b3;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        
+        /* Loading indicator */
+        .loading-message {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            z-index: 1000;
+            font-weight: bold;
+        }
+        
+        /* Hide content initially */
+        .content-container {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .content-container.loaded {
+            opacity: 1;
+        }
+        
+        .placeholder-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        
+        .placeholder-text {
+            font-size: 12px;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        /* Slider styles */
+        .slider-container {
+            margin: 1rem auto 1.5rem;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .slider-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #495057;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .slider-with-value {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        input[type="range"] {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: #dee2e6;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #0056b3;
+        }
+        
+        .slider-value {
+            background-color: #007BFF;
+            color: white;
+            width: 40px;
+            height: 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.85rem;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, auto);
+            }
+            
+            .predictions-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .grid-container, .predictions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-message" id="loading-message">
+        Computed all {{ total_methods }} saliency models at intensity {{ intensity }}. Loading page...
+    </div>
+    
+    <div class="container content-container" id="content-container">
+        <h1>Saliency Models Comparison</h1>
+        
+        <div class="original-image">
+            <h3>Original Image</h3>
+            <img src="{{ image.url }}" alt="Original Image">
+        </div>
+        
+        <div class="slider-container">
+            <div class="slider-label">Saliency Intensity</div>
+            <div class="slider-with-value">
+                <input type="range" id="intensity-slider" min="0" max="100" value="{{ intensity }}" class="slider">
+                <div class="slider-value" id="slider-value">{{ intensity }}</div>
+            </div>
+        </div>
+        
+        <div class="grid-container">
+            {% for row in grid %}
+                {% for method in row %}
+                    <div class="grid-item">
+                        <h3>{{ method }}</h3>
+                        <div class="image-container">
+                            <img src="{{ results|get_item:method }}" alt="{{ method }} visualization">
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        
+        <div class="predictions-container">
+            <h2 class="predictions-title">Predictions from Each Model</h2>
+            <div class="predictions-grid">
+                {% for method in methods %}
+                    <div class="prediction-item">
+                        <div class="prediction-method">{{ method }}</div>
+                        <div class="prediction-class">{{ predictions|get_item:method }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="buttons-container">
+            <a href="{% url 'GradCam:demo_images' %}" class="back-button">Back to Gallery</a>
+            <a href="{% url 'GradCam:view_demo_image' image.image|basename %}" class="explore-button">Explore Interactively</a>
+        </div>
+    </div>
+    
+    <script>
+        // Handle slider changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const slider = document.getElementById('intensity-slider');
+            const sliderValue = document.getElementById('slider-value');
+            const contentContainer = document.getElementById('content-container');
+            const loadingMessage = document.getElementById('loading-message');
+            
+            // Show content and hide loading message
+            contentContainer.classList.add('loaded');
+            loadingMessage.style.display = 'none';
+            
+            // Update the displayed value
+            slider.addEventListener('input', function() {
+                sliderValue.textContent = this.value;
+            });
+            
+            // When slider is released, navigate to the page with new intensity
+            slider.addEventListener('change', function() {
+                // Show loading message again
+                loadingMessage.style.display = 'block';
+                contentContainer.classList.remove('loaded');
+                
+                const newIntensity = this.value;
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('intensity', newIntensity);
+                window.location.href = currentUrl.toString();
+            });
+        });
+    </script>
+</body>
+</html> 

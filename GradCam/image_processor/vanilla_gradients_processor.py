@@ -6,6 +6,7 @@ import base64
 import numpy as np
 from PIL import Image
 from matplotlib import cm
+import traceback
 
 # TensorFlow / Keras
 from tensorflow.keras.preprocessing.image import img_to_array
@@ -34,11 +35,15 @@ def process_image_vanilla_gradients(image_path, intensity):
     :param intensity: An integer 0–100 controlling heatmap opacity.
     :return: (base64_image, predicted_class_name) or (None, error_string)
     """
-    # Construct the full path to the image
-    full_image_path = os.path.join(settings.MEDIA_ROOT, image_path)
-    print(f"Loading image from path: {full_image_path}")
-
     try:
+        # Normalize path - replace backslashes with forward slashes
+        image_path = image_path.replace('\\', '/').strip()
+        
+        # Construct full path using os.path.join which handles OS-specific path separators
+        full_image_path = os.path.normpath(os.path.join(settings.MEDIA_ROOT, image_path))
+        
+        print(f"[Vanilla Gradients] Loading image from path: {full_image_path}")
+
         # 1. Load and preprocess the image
         img = Image.open(full_image_path)
         original_size = img.size
@@ -87,4 +92,5 @@ def process_image_vanilla_gradients(image_path, intensity):
 
     except Exception as e:
         print(f"Error processing the image (Vanilla Gradients): {e}")
-        return None, "Error processing the image"
+        print(f"Full traceback: {traceback.format_exc()}")
+        return None, f"Error processing the image: {str(e)}"

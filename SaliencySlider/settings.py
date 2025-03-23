@@ -53,7 +53,7 @@ MIDDLEWARE = [
     'GradCam.custom_middleware.AllowIframeMiddleware',
 ]
 
-ROOT_URLCONF = "saliencyslider.urls"
+ROOT_URLCONF = "SaliencySlider.urls"
 
 TEMPLATES = [
     {
@@ -71,7 +71,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "saliencyslider.wsgi.application"
+WSGI_APPLICATION = "SaliencySlider.wsgi.application"
 
 
 # Database
@@ -127,5 +127,6 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-MEDIA_ROOT = '/code/media' # for server path to store files in the computer
-MEDIA_URL = '/media/' # reference URL for browser to access files over Http
+# Media files (User uploads)
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

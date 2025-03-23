@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>Saliency Slider - Upload</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,21 +14,74 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
         .container {
             text-align: center;
             background-color: #ffffff;
             padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            max-width: 600px;
+            width: 90%;
+            transform: translateY(30px);
+            opacity: 0;
+            animation: slideUp 0.8s ease forwards 0.3s;
         }
+
         h1 {
             color: #333;
+            margin-bottom: 1rem;
         }
+
         p {
             color: #555;
+            line-height: 1.6;
+            margin-bottom: 2rem;
         }
-        button {
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: #007BFF;
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        #image {
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .custom-file-button {
             background-color: #007BFF;
             color: white;
             border: none;
@@ -37,23 +90,184 @@
             border-radius: 5px;
             cursor: pointer;
             transition: background-color 0.3s;
+            display: inline-block;
         }
-        button:hover {
+
+        .custom-file-button:hover {
             background-color: #0056b3;
+        }
+
+        .selected-file {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        button[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+            display: none;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: #343a40;
+            text-decoration: underline;
+        }
+        
+        .demo-link {
+            display: block;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            color: #495057;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        .demo-link:hover {
+            background-color: #e9ecef;
+            color: #212529;
+        }
+        
+        .demo-link-title {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #007bff;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to Saliency Slider</h1>
-        <p>Decisions from AI models can often seem opaque. <br> 
-            Saliency methods highlight which parts of an image are most influential. <br>
-            Upload your own images below and explore the power of explainable AI.
-            <form action="{% url 'GradCam:user_image' %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="file" name="image" id="image" required>
-                <button type="submit">Upload Image</button>
-            </form>
+        <p>
+            Decisions from AI models can often seem opaque. Saliency methods highlight which parts of an image are most influential. 
+            Upload your own image below and explore the power of explainable AI.
+        </p>
+        <form action="{% url 'GradCam:user_image' %}" method="post" enctype="multipart/form-data" id="upload-form">
+            {% csrf_token %}
+            <div class="upload-area" id="drop-area">
+                <div class="file-input-wrapper">
+                    <div class="custom-file-button">Choose an Image</div>
+                    <input type="file" name="image" id="image" required accept="image/*">
+                </div>
+                <div class="selected-file" id="file-info">No file selected</div>
+            </div>
+            <button type="submit" id="submit-button">Analyze Image</button>
+        </form>
+        
+        <a href="{% url 'GradCam:demo_images' %}" class="demo-link">
+            <span class="demo-link-title">Try Demo Images</span>
+            Explore precomputed examples with instant saliency visualization
+        </a>
+        
+        <a href="{% url 'GradCam:gradcam_landing' %}" class="back-link">← Back to home</a>
     </div>
+
+    <script>
+        // Add entry animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Black entrance overlay
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = '#000';
+            overlay.style.zIndex = '1000';
+            overlay.style.transition = 'opacity 1s ease';
+            document.body.appendChild(overlay);
+
+            // Fade out the black overlay
+            setTimeout(() => {
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.remove();
+                }, 1000);
+            }, 300);
+
+            // File input handling
+            const fileInput = document.getElementById('image');
+            const fileInfo = document.getElementById('file-info');
+            const submitButton = document.getElementById('submit-button');
+
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    fileInfo.textContent = this.files[0].name;
+                    submitButton.style.display = 'inline-block';
+                } else {
+                    fileInfo.textContent = 'No file selected';
+                    submitButton.style.display = 'none';
+                }
+            });
+
+            // Drag and drop functionality
+            const dropArea = document.getElementById('drop-area');
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                dropArea.classList.add('highlight');
+                dropArea.style.borderColor = '#007BFF';
+                dropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+            }
+            
+            function unhighlight() {
+                dropArea.classList.remove('highlight');
+                dropArea.style.borderColor = '#ccc';
+                dropArea.style.backgroundColor = '';
+            }
+            
+            dropArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                if (files && files.length) {
+                    fileInput.files = files;
+                    fileInfo.textContent = files[0].name;
+                    submitButton.style.display = 'inline-block';
+                }
+            }
+        });
+    </script>
 </body>
 </html>

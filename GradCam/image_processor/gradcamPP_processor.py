@@ -6,6 +6,7 @@ import base64
 import numpy as np
 from PIL import Image
 from matplotlib import cm
+import traceback
 
 from tensorflow.keras.preprocessing.image import img_to_array
 from tensorflow.keras.applications.vgg19 import preprocess_input
@@ -25,10 +26,15 @@ def process_image_gradcamPP(image_path, intensity):
     """
     Grad-CAM++ is an improvement over Grad-CAM for better object localization.
     """
-    full_image_path = os.path.join(settings.MEDIA_ROOT, image_path)
-    print(f"[Grad-CAM++] Loading image from path: {full_image_path}")
-
     try:
+        # Normalize path - replace backslashes with forward slashes
+        image_path = image_path.replace('\\', '/').strip()
+        
+        # Construct full path using os.path.join which handles OS-specific path separators
+        full_image_path = os.path.normpath(os.path.join(settings.MEDIA_ROOT, image_path))
+        
+        print(f"[Grad-CAM++] Loading image from path: {full_image_path}")
+
         # 1. Load & preprocess
         img = Image.open(full_image_path)
         original_size = img.size
@@ -68,4 +74,5 @@ def process_image_gradcamPP(image_path, intensity):
 
     except Exception as e:
         print(f"Error processing the image (Grad-CAM++): {e}")
-        return None, "Error processing the image"
+        print(f"Full traceback: {traceback.format_exc()}")
+        return None, f"Error processing the image: {str(e)}"

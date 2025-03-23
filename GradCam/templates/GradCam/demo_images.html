@@ -1,0 +1,207 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saliency Slider - Demo Images</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 2rem 0;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            color: #0d47a1;
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .demo-item {
+            display: flex;
+            flex-direction: column;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: white;
+            position: relative;
+        }
+
+        .demo-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .demo-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .demo-info {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .demo-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .demo-button {
+            display: inline-block;
+            background-color: #007BFF;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            text-align: center;
+            margin-top: auto;
+            transition: background-color 0.3s ease;
+        }
+
+        .demo-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+        }
+        
+        .grid-button {
+            background-color: #28a745;
+        }
+        
+        .grid-button:hover {
+            background-color: #218838;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+        
+        .upload-area h3 {
+            margin-top: 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #6c757d;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'GradCam:index' %}" class="back-link">← Back to Upload</a>
+        <h1>Demo Images</h1>
+        
+        <div class="info-box">
+            <h3>Saliency Maps On Demand</h3>
+            <p>Demo images are processed on demand when you view them. The first time you view a saliency map for 
+               an image, it may take a few seconds to compute.</p>
+            <p>Choose an option for each image:</p>
+            <ul>
+                <li><strong>Explore Saliency</strong> - Interact with a single model and adjust intensity</li>
+                <li><strong>View All Models</strong> - See all 6 saliency models at once in a grid</li>
+            </ul>
+        </div>
+        
+        {% if demo_images %}
+        <div class="demo-grid">
+            {% for image in demo_images %}
+            <div class="demo-item">
+                <img src="{{ image.url }}" alt="{{ image.name }}" class="demo-image">
+                <div class="demo-info">
+                    <div class="demo-title">{{ image.name }}</div>
+                    <div class="demo-buttons">
+                        <a href="{% url 'GradCam:view_demo_image' image.name %}" class="demo-button">
+                            Explore Saliency
+                        </a>
+                        <a href="{% url 'GradCam:all_models_view' image.name %}" class="demo-button grid-button">
+                            View All Models
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No demo images found. Add images to the 'demo_images' directory in your media folder.</p>
+            
+            <div class="upload-area">
+                <h3>How to Add Demo Images</h3>
+                <p>1. Create a 'demo_images' folder in your media directory</p>
+                <p>2. Add .jpg or .png images to this folder</p>
+                <p>3. Refresh this page to see your demo images</p>
+                <p>Note: Images will be processed in the background to precalculate all saliency maps.</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html> 

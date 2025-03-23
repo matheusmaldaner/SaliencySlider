@@ -17,6 +17,13 @@ urlpatterns = [
     path('raw_images/', views.display_raw_images, name = 'raw_images'),
     path('last_image/', views.display_last_image, name="last_image"),
     path('update_image/', views.update_image, name='update_image'),
+    
+    # Demo images routes
+    path('demo/', views.demo_images, name='demo_images'),
+    path('demo/<str:filename>/', views.view_demo_image, name='view_demo_image'),
+    
+    # Grid view of all saliency models
+    path('all_models/<str:filename>/', views.all_models_view, name='all_models_view'),
 ]
 
 if settings.DEBUG:

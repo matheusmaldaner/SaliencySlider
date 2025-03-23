@@ -1,4 +1,3 @@
-
 # gradcam_processor.py
 import os
 import io
@@ -13,14 +12,20 @@ from tf_keras_vis.utils import normalize
 from tf_keras_vis.utils.scores import CategoricalScore
 from django.conf import settings
 from .model_loader import model, global_model, CLASS_INDEX
+import traceback
 
 gradcam = Gradcam(model, clone=False)
 
 def process_image_gradcam(image_path, intensity):
-    full_image_path = os.path.join(settings.MEDIA_ROOT, image_path)
-    print(f"Loading image from path: {full_image_path}")
-
     try:
+        # Normalize path - replace backslashes with forward slashes
+        image_path = image_path.replace('\\', '/').strip()
+        
+        # Construct full path using os.path.join which handles OS-specific path separators
+        full_image_path = os.path.normpath(os.path.join(settings.MEDIA_ROOT, image_path))
+        
+        print(f"Loading image from path: {full_image_path}")
+
         img = Image.open(full_image_path)
         original_size = img.size
         img_copy = img.resize((224, 224)).convert('RGB')
@@ -57,4 +62,5 @@ def process_image_gradcam(image_path, intensity):
 
     except Exception as e:
         print(f"Error processing the image (GradCAM): {e}")
-        return None, "Error processing the image"
+        print(f"Full traceback: {traceback.format_exc()}")
+        return None, f"Error processing the image: {str(e)}"

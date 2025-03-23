@@ -3,88 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Processor</title>
+    <title>Saliency Analysis</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .container {
+            text-align: center;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            margin: 2rem;
+            width: 90%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 1rem;
+        }
+
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 2rem;
+        }
+
+        .method-selector {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .method-button {
+            padding: 8px 16px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        .method-button.active {
+            background-color: #007BFF;
+            color: white;
+            border-color: #007BFF;
+        }
+
+        .method-button:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+
+        .slider-container {
+            width: 100%;
+            padding: 0 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .slider-label {
+            display: block;
+            margin-bottom: 0.8rem;
+            color: #495057;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .slider-with-value {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        input[type="range"] {
+            flex-grow: 1;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 5px;
+            background: #dee2e6;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #007BFF;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #0056b3;
+        }
+
+        .slider-value {
+            background-color: #007BFF;
+            color: white;
+            width: 50px;
+            height: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            border-radius: 15px;
+            font-weight: bold;
         }
-        .container {  
-            text-align: center;
-            background-color: #ffffff;
-            padding: 40px;
+
+        .image-container {
+            position: relative;
+            margin: 0 auto;
+            max-width: 100%;
+            overflow: hidden;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 80%; /* Adjust width to fit content better */
-            max-width: 600px; /* Limit the maximum width */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
         }
-        h1 {
-            color: #333;
+
+        .image-container:hover {
+            transform: scale(1.02);
         }
-        label {
+
+        img {
             display: block;
-            margin-top: 20px;
-            color: #555;
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .predicted-class-container {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        p#predicted-class {
+            margin: 0;
+            color: #495057;
             font-size: 18px;
         }
-        input[type="range"] {
-            width: 100%;
-            margin: 10px 0;
+
+        #class-label {
+            font-weight: bold;
+            color: #28a745;
         }
-        img {
-            max-width: 100%; /* Ensures the image does not exceed the container width */
-            height: auto;
-            border-radius: 8px; /* Optional: adds rounded corners to the image */
+
+        .back-button {
+            display: inline-block;
+            margin-top: 1.5rem;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
         }
-        p#predicted-class {
-            color: #666;
-            font-size: 20px;
-            margin-top: 20px; /* Adjust spacing as needed */
+
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+
+        .method-info {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 6px;
+            cursor: help;
+        }
+
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #6c757d;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tooltip-text {
+            visibility: hidden;
+            width: 300px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -150px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to Saliency Slider</h1>
+        <h1>Saliency Analysis</h1>
         
-        <label for="method-select">Select Method:</label>
-        <select id="method-select">
-            <option value="gradcam" selected>GradCAM</option>
-            <option value="activation-maximization">Activation Maximization</option>
-            <option value="integrated-gradients">Integrated Gradients</option>
-            <option value="vanilla-gradients">Vanilla Gradients</option>
-            <option value="score-cam">ScoreCAM</option>
-            <option value="gradcamPP">GradCAM++</option>
+        <div class="control-panel">
+            <div class="method-selector">
+                <button class="method-button active" data-method="gradcam">GradCAM</button>
+                <button class="method-button" data-method="gradcamPP">GradCAM++</button>
+                <button class="method-button" data-method="score-cam">ScoreCAM</button>
+                <button class="method-button" data-method="vanilla-gradients">Vanilla</button>
+                <button class="method-button" data-method="integrated-gradients">Integrated</button>
+                <button class="method-button" data-method="activation-maximization">Activation</button>
+            </div>
             
-        </select>
+            <div class="slider-container">
+                <div class="slider-label">
+                    Saliency Intensity
+                    <span class="tooltip">
+                        <span class="tooltip-icon">?</span>
+                        <span class="tooltip-text">
+                            Slide to adjust how strongly saliency information is overlaid on the image. 
+                            At 0%, you see the original image, while at 100% you see full saliency.
+                        </span>
+                    </span>
+                </div>
+                <div class="slider-with-value">
+                    <input type="range" id="intensity-slider" min="0" max="100" value="0" step="1">
+                    <div class="slider-value" id="intensity-value">0%</div>
+                </div>
+            </div>
+        </div>
         
-        <label for="intensity-slider">Feature Saliency Percentage: <span id="intensity-value">0</span>%</label>
-        <input type="range" id="intensity-slider" min="0" max="100" value="0" step="1">
+        <div class="image-container">
+            <img id="image-display" src="{{ last_image.image.url }}" alt="Saliency Analysis">
+        </div>
         
-        <img id="image-display" src="{{ last_image.image.url }}" alt="Processed Image">
-        <p id="predicted-class">Predicted Class: <span id="class-label">N/A</span></p>
+        <div class="predicted-class-container">
+            <p id="predicted-class">Predicted Class: <span id="class-label">Loading...</span></p>
+        </div>
         
-        <script>
+        <div class="method-info" id="method-description">
+            <strong>GradCAM:</strong> Visualizes the gradient of the target concept flowing into the final convolutional layer to produce a coarse localization map of the important regions in the image.
+        </div>
+        
+        <a href="{% url 'GradCam:index' %}" class="back-button">Upload a Different Image</a>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const methodButtons = document.querySelectorAll('.method-button');
+            const methodDescription = document.getElementById('method-description');
             const intensitySlider = document.getElementById('intensity-slider');
             const intensityValueDisplay = document.getElementById('intensity-value');
-            const methodSelect = document.getElementById('method-select');
             const imageDisplay = document.getElementById('image-display');
             const classLabelDisplay = document.getElementById('class-label');
             const originalImageUrl = imageDisplay.src; // Store the original image URL
-
+            
+            // Method descriptions
+            const methodDescriptions = {
+                'gradcam': '<strong>GradCAM:</strong> Visualizes the gradient of the target concept flowing into the final convolutional layer to produce a coarse localization map of the important regions in the image.',
+                'gradcamPP': '<strong>GradCAM++:</strong> An improved version of GradCAM that uses a weighted combination of the positive partial derivatives to better capture the importance of each pixel.',
+                'score-cam': '<strong>ScoreCAM:</strong> Generates importance weights by measuring how feature map activation affects the model output, without using gradients.',
+                'vanilla-gradients': '<strong>Vanilla Gradients:</strong> The simplest saliency method that visualizes gradients of the output with respect to the input image.',
+                'integrated-gradients': '<strong>Integrated Gradients:</strong> Attributes the prediction by integrating gradients along a straight path from a baseline to the input.',
+                'activation-maximization': '<strong>Activation Maximization:</strong> Visualizes what features would maximally activate specific neurons in the network.'
+            };
+            
+            let currentMethod = 'gradcam';
+            
+            // Method button click handlers
+            methodButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Update active state
+                    methodButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Get the selected method
+                    currentMethod = this.dataset.method;
+                    
+                    // Update method description
+                    methodDescription.innerHTML = methodDescriptions[currentMethod];
+                    
+                    // Update the image
+                    updateImage();
+                });
+            });
+            
+            // Slider input handler 
+            intensitySlider.addEventListener('input', function() {
+                intensityValueDisplay.textContent = this.value + '%';
+                updateImage();
+            });
+            
             // Function to send a request to update the image
             function updateImage() {
-                const intensity = intensitySlider.value; // Get the intensity value
-                const method = methodSelect.value; // Get the selected method
-
-                intensityValueDisplay.textContent = intensity;
-
+                const intensity = intensitySlider.value;
+                
+                // Add loading state
+                imageDisplay.style.opacity = '0.6';
+                classLabelDisplay.textContent = 'Processing...';
+                
                 fetch('{% url "GradCam:update_image" %}', {
                     method: 'POST',
                     headers: {
@@ -94,11 +347,16 @@
                     },
                     body: JSON.stringify({
                         intensity: intensity,
-                        method: method,
+                        method: currentMethod,
                         image_path: originalImageUrl
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.image_data_url && 'predicted_class' in data) {
                         // Update the displayed image
@@ -106,15 +364,20 @@
                         classLabelDisplay.textContent = data.predicted_class;
                     } else {
                         console.error('Error:', data.error);
+                        classLabelDisplay.textContent = 'Error processing image';
                     }
+                    imageDisplay.style.opacity = '1';
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    classLabelDisplay.textContent = 'Error processing image';
+                    imageDisplay.style.opacity = '1';
+                });
             }
-
-            // Attach event listeners
-            intensitySlider.addEventListener('input', updateImage);
-            methodSelect.addEventListener('change', updateImage);
-        </script>
-    </div>
+            
+            // Initialize with GradCAM
+            updateImage();
+        });
+    </script>
 </body>
 </html>
