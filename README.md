@@ -1,48 +1,71 @@
-# SaliencySlider
+<div align="center">
 
-SaliencySlider is a web application that enables users to upload images and interactively explore how a pretrained VGG19 convolutional neural network uses specific regions of the image for classification. The application features a saliency slider that allows users to dynamically control the visibility of influential image regions.
+<!-- Replace with your own banner/logo path -->
+<img src="banner.svg" alt="SaliencySlider Logo">
 
-## Features
+*Interactively explore Grad-CAM saliency maps for VGG19 image classification.*
 
-- **Image Upload**: Users can upload their own images to analyze.
-- **Interactive Saliency Exploration**: A slider provides control over how many features of the image are shown, based on their influence on the classification decision.
-- **Pretrained VGG19 CNN**: Utilizes a robust model trained on a wide variety of images for accurate classification.
+<!-- Badges (edit links as needed) -->
+![Python](https://img.shields.io/badge/python-3.10-orange)
+[![Model](https://img.shields.io/badge/model-VGG19-6A5ACD)](https://keras.io/api/applications/vgg/)
+<a href="./SaliencySlider_Report.pdf">
+  <img alt="Final Report PDF" src="https://img.shields.io/badge/Final%20Report-PDF-red?logo=adobeacrobatreader&logoColor=white">
+</a>
+<a href="https://colab.research.google.com/drive/1xJEuaht0o6cHeA3eo6A3KWSu14sSp-wY?usp=sharing">
+  <img alt="Google Colab" src="https://img.shields.io/badge/Try%20it-Google%20Colab-F9AB00?logo=googlecolab&logoColor=white">
+</a>
 
-## Getting Started
-
-To use SaliencySlider, visit the deployed web application or experiment with the code in Google Colab.
-
-- **Web Application**: [Visit SaliencySlider](https://matheusmaldaner.pythonanywhere.com/GradCam/)
-- **Google Colab**: [Experiment with SaliencySlider](https://colab.research.google.com/drive/1xJEuaht0o6cHeA3eo6A3KWSu14sSp-wY?usp=sharing)
-
-## Final Report
-
-For a detailed explanation of the project, methodologies, and results, refer to our final report:
-
-- [Read the Final Report](./SaliencySlider_Report.pdf)
-
-We are currently working on further development and tests for SaliencySlider, exploring the potential direction of conducting a user study to gauge the usability and usefulness of our application.
-
-## Deployment
-
-The SaliencySlider web application is deployed using Django and hosted on pythonanywhere, ensuring consistent availability and performance.
-
-We are currently working on transfering the deployment of the application to be hosted using Docker on Amazon Lightsail Container.
-
-### Docker:
-Make sure Docker Daemon is running
-Build command:
-`docker build -t saliency-slider-app`
-Run command: 
-`docker run -d -p 8000:8000 saliency-slider-app`
+</div>
 
 
-## Contributors
+### 🧠 Overview
 
-* Matheus Kunzler Maldaner
+**SaliencySlider** is a web application that lets you upload an image and **interactively explore** how a pretrained **VGG19** convolutional neural network makes classification decisions.  
+A saliency slider controls how much of the **most influential image regions** (via Grad-CAM style saliency) are revealed, helping you understand what the model is “looking at.”
 
-* Kian Ambrose
 
-* Lexie Certo
+## ✨ Features
 
-* Kristian O'Connor
+- **Image Upload**: Upload your own images for analysis.
+- **Interactive Saliency Exploration**: Slider controls how many influential regions are visible.
+- **Pretrained VGG19 CNN**: Uses a robust pretrained model for classification.
+
+
+## Quick Start
+
+You can experiment in Google Colab, or run locally via Docker.
+
+## 🐳 Deployment (Docker)
+
+Make sure Docker Desktop / Docker Daemon is running.
+
+Build:
+
+```bash
+docker build -t saliency-slider-app .
+```
+
+Run:
+
+```bash
+docker run -d -p 8000:8000 saliency-slider-app
+```
+
+
+## 🧩 Tech Stack
+
+| Component     | Technology |
+| ------------- | ---------- |
+| 🖥️ Web App    | Django     |
+| 🧠 Model      | VGG19      |
+| 🔍 Explainability | Grad-CAM / Saliency Maps |
+| 🐳 Deployment | Docker     |
+| 📓 Notebook   | Google Colab |
+
+
+## 👥 Contributors
+
+- Matheus Kunzler Maldaner — [GitHub](https://github.com/matheusmaldaner)  
+- Kian Ambrose — [GitHub](https://github.com/kianambrose)  
+- Lexie Certo  
+- Kristian O'Connor — [GitHub](https://github.com/kroc99)  
