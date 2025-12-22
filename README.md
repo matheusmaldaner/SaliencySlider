@@ -8,7 +8,7 @@
 <!-- Badges (edit links as needed) -->
 ![Python](https://img.shields.io/badge/python-3.10-orange)
 [![Model](https://img.shields.io/badge/model-VGG19-6A5ACD)](https://keras.io/api/applications/vgg/)
-<a href="./SaliencySlider_Report.pdf">
+<a href="./SaliencySlider.pdf">
   <img alt="Final Report PDF" src="https://img.shields.io/badge/Final%20Report-PDF-red?logo=adobeacrobatreader&logoColor=white">
 </a>
 <a href="https://colab.research.google.com/drive/1xJEuaht0o6cHeA3eo6A3KWSu14sSp-wY?usp=sharing">
