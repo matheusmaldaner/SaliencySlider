@@ -1,21 +1,15 @@
 import json
-from django.db.models import F
-from django.shortcuts import get_object_or_404, render, redirect
-from django.http import Http404 # to raise 404 errors
-from django.http import HttpResponse, HttpResponseRedirect
-from django.template import loader # eg. template = loader.get_template("GradCam/index.html")
-from django.urls import reverse
-from django import forms
-from django.core.files.storage import FileSystemStorage
-from django.http import JsonResponse
 import re
 import os
 from urllib.parse import urlparse
 
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, JsonResponse
+
 from .models import UserImage
 from .forms import UserImageForm
 
-from .image_processor.cache_manager import get_saliency_result, start_precomputation_thread
+from .image_processor.cache_manager import get_saliency_result
 
 # Import all processors for backward compatibility
 from .image_processor.gradcam_processor import process_image_gradcam

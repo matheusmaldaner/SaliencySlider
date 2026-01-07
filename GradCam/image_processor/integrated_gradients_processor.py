@@ -42,7 +42,7 @@ def process_image_integrated_gradients(image_path, intensity):
         # Normalize and overlay the saliency map on the original image
         saliency_map = normalize(saliency_map[0])
         heatmap = np.uint8(cm.jet(saliency_map[..., 0])[..., :3] * 255)
-        heatmap_img = Image.fromarray(heatmap).resize(original_size).convert("RGBA")
+        heatmap_img = Image.fromarray(heatmap).resize(original_size, Image.LANCZOS).convert("RGBA")
 
         # Use the original image size for blending
         img_original = img.convert("RGBA")
