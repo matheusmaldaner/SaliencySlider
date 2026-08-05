@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SaliencySlider — see what a CNN sees</title>
+<title>SaliencySlider, see what a CNN sees</title>
 <meta name="description" content="SaliencySlider is a Django web app for interactively exploring Grad-CAM saliency maps of a pretrained VGG19 image classifier.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%2310b981'/%3E%3Ctext x='16' y='23' font-family='system-ui, -apple-system, sans-serif' font-size='20' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ES%3C/text%3E%3C/svg%3E">
 <script>
   // apply saved theme before first paint
   (function () {
@@ -168,7 +169,6 @@
   .hero h1 em { font-style: normal; color: var(--color-primary); }
   .hero .lede {
     margin-top: 22px;
-    max-width: 58ch;
     font-size: 1.05rem;
     color: var(--color-text-muted);
   }
@@ -207,7 +207,7 @@
     font-size: clamp(1.4rem, 3vw, 1.6rem);
     letter-spacing: -0.02em;
   }
-  section > .container > p, .prose p { color: var(--color-text-muted); max-width: 66ch; }
+  section > .container > p, .prose p { color: var(--color-text-muted); }
   .prose p + p { margin-top: 14px; }
 
   /* demo */
@@ -392,7 +392,6 @@
     margin-top: 16px;
     font-size: 0.82rem;
     color: var(--color-text-muted);
-    max-width: 70ch;
   }
 
   /* methods list */
@@ -447,7 +446,7 @@
     background: rgba(16, 185, 129, 0.12);
     color: var(--color-primary);
   }
-  .credits { margin-top: 26px; font-size: 0.92rem; color: var(--color-text-muted); max-width: 66ch; }
+  .credits { margin-top: 26px; font-size: 0.92rem; color: var(--color-text-muted); }
 
   footer {
     border-top: 1px solid var(--color-border);
