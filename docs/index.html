@@ -7,195 +7,174 @@
 <meta name="description" content="SaliencySlider is a Django web app for interactively exploring Grad-CAM saliency maps of a pretrained VGG19 image classifier.">
 <style>
   :root {
-    --bg-primary: #f5f5f7;
-    --bg-secondary: #ffffff;
-    --text-primary: #1d1d1f;
-    --text-secondary: #6e6e73;
-    --text-muted: #86868b;
-    --border: rgba(0, 0, 0, 0.08);
-    --border-hover: rgba(0, 0, 0, 0.15);
-    --accent: #10b981;
-    --accent-hover: #059669;
-    --accent-glow: rgba(16, 185, 129, 0.2);
-    --accent-dim: rgba(16, 185, 129, 0.12);
-    --glass-bg: rgba(255, 255, 255, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.5);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 20px;
-    --transition: 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-    --transition-fast: 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    --bg: #fcfcfa;
+    --bg-raised: #ffffff;
+    --ink: #16181a;
+    --ink-2: #55595e;
+    --ink-3: #85898f;
+    --line: #e3e2de;
+    --line-strong: #c9c8c3;
+    --hot: #c2331f;
+    --cold: #1f4fc2;
+    --hot-ink: #ffffff;
+    /* discrete jet colormap steps, coldest to hottest */
+    --jet-1: #23409e;
+    --jet-2: #1d7fd1;
+    --jet-3: #2db5a0;
+    --jet-4: #b7c92e;
+    --jet-5: #e58a1f;
+    --jet-6: #c2331f;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg-primary: #000000;
-      --bg-secondary: #0d0d0d;
-      --text-primary: #fafafa;
-      --text-secondary: #a3a3a3;
-      --text-muted: #737373;
-      --border: #262626;
-      --border-hover: #404040;
-      --accent: #34d399;
-      --accent-hover: #10b981;
-      --accent-glow: rgba(52, 211, 153, 0.3);
-      --accent-dim: rgba(52, 211, 153, 0.15);
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.1);
-      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --bg: #121314;
+      --bg-raised: #1a1b1d;
+      --ink: #eceae6;
+      --ink-2: #a3a29e;
+      --ink-3: #7c7b77;
+      --line: #2a2b2d;
+      --line-strong: #414244;
+      --hot: #e05238;
+      --cold: #5c85e6;
+      --hot-ink: #121314;
+      --jet-1: #3a58b8;
+      --jet-2: #2f8fdb;
+      --jet-3: #3bbfab;
+      --jet-4: #c3d345;
+      --jet-5: #ec9a35;
+      --jet-6: #e05238;
     }
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html { scroll-behavior: smooth; }
-
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
   }
 
-  /* soft ambient glow behind the hero */
-  .glow {
-    position: fixed;
-    top: -220px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 720px;
-    height: 520px;
-    background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
-  }
+  a { color: inherit; }
 
-  main { position: relative; z-index: 1; }
+  .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
 
-  .container {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  /* hero */
-  .hero {
-    text-align: center;
-    padding: 108px 0 72px;
-  }
-  .hero .badge {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 999px;
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
-    color: var(--text-secondary);
-    margin-bottom: 26px;
-  }
-  .hero h1 {
-    font-size: clamp(2.6rem, 7vw, 4.2rem);
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1.08;
-    background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .hero p.tagline {
-    margin: 22px auto 0;
-    max-width: 560px;
-    font-size: 1.15rem;
-    color: var(--text-secondary);
-  }
-  .hero .cta-row {
-    margin-top: 36px;
+  /* top bar */
+  .topbar { border-bottom: 1px solid var(--line); }
+  .topbar .container {
     display: flex;
-    gap: 14px;
-    justify-content: center;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-top: 18px;
+    padding-bottom: 18px;
+    gap: 16px;
     flex-wrap: wrap;
   }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: 999px;
+  .wordmark {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
     font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+  }
+  .wordmark .tick { color: var(--hot); }
+  .topbar nav { display: flex; gap: 22px; font-size: 0.85rem; }
+  .topbar nav a { color: var(--ink-2); text-decoration: none; }
+  .topbar nav a:hover { color: var(--ink); }
+
+  /* hero */
+  .hero { padding: 72px 0 56px; }
+  .kicker {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: clamp(2.2rem, 5.5vw, 3.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    max-width: 21ch;
+  }
+  .hero h1 em { font-style: italic; color: var(--hot); }
+  .hero .lede {
+    margin-top: 22px;
+    max-width: 58ch;
+    font-size: 1.05rem;
+    color: var(--ink-2);
+  }
+  .hero .cta-row { margin-top: 34px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    font-size: 0.9rem;
     font-weight: 500;
     text-decoration: none;
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    background: var(--bg-raised);
+    color: var(--ink);
+    transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
   }
+  .btn:hover { border-color: var(--ink); }
   .btn-primary {
-    background: var(--accent);
-    color: #06281c;
-    box-shadow: 0 4px 20px var(--accent-glow);
+    background: var(--hot);
+    border-color: var(--hot);
+    color: var(--hot-ink);
   }
-  .btn-primary:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px var(--accent-glow);
-  }
-  .btn-glass {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    color: var(--text-primary);
-  }
-  .btn-glass:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+  .btn-primary:hover { border-color: var(--hot); opacity: 0.9; }
 
   /* sections */
-  section { padding: 56px 0; }
+  section { padding: 56px 0; border-top: 1px solid var(--line); }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
   .section-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
+    color: var(--ink-3);
+    white-space: nowrap;
   }
   h2 {
-    font-size: clamp(1.6rem, 4vw, 2.1rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 18px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    letter-spacing: -0.01em;
   }
-  section p { color: var(--text-secondary); max-width: 640px; }
+  section > .container > p, .prose p { color: var(--ink-2); max-width: 66ch; }
+  .prose p + p { margin-top: 14px; }
 
-  .card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    padding: 28px;
-    transition: border-color var(--transition-fast), transform var(--transition-fast);
+  /* demo */
+  #demo { padding-top: 48px; }
+  .viewer {
+    margin-top: 30px;
+    border: 1px solid var(--line-strong);
+    border-radius: 4px;
+    background: var(--bg-raised);
+    overflow: hidden;
   }
-
-  /* comparison slider */
-  .demo-wrap { margin-top: 30px; }
   .compare {
     position: relative;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
     aspect-ratio: 1 / 1;
-    max-width: 560px;
-    margin: 0 auto;
-    box-shadow: var(--shadow-lg);
+    max-height: 78vh;
     user-select: none;
     -webkit-user-select: none;
     touch-action: none;
     cursor: ew-resize;
+    border-bottom: 1px solid var(--line);
   }
   .compare img {
     position: absolute;
@@ -206,229 +185,291 @@
     display: block;
     pointer-events: none;
   }
-  .compare .after-layer {
-    position: absolute;
-    inset: 0;
-    clip-path: inset(0 0 0 50%);
-  }
-  .compare .divider {
+  .after-layer { position: absolute; inset: 0; clip-path: inset(0 0 0 50%); }
+  .divider {
     position: absolute;
     top: 0;
     bottom: 0;
     left: 50%;
     width: 2px;
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-    transform: translateX(-1px);
+    margin-left: -1px;
+    background: var(--bg);
+    outline: 1px solid var(--ink);
   }
-  .compare .handle {
+  .handle {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #1d1d1f;
-    font-size: 0.85rem;
-    letter-spacing: -0.05em;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.9rem;
+    cursor: ew-resize;
   }
+  .handle:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
   .compare .tag {
     position: absolute;
-    top: 14px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    background: rgba(0, 0, 0, 0.55);
-    color: #fff;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    top: 12px;
+    padding: 3px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     pointer-events: none;
   }
-  .compare .tag.left { left: 14px; }
-  .compare .tag.right { right: 14px; }
+  .tag.left { left: 12px; }
+  .tag.right { right: 12px; }
 
-  .intensity-row {
-    max-width: 560px;
-    margin: 22px auto 0;
+  /* viewer controls */
+  .controls { padding: 20px; display: grid; gap: 18px; }
+  .control-row {
     display: flex;
     align-items: center;
     gap: 16px;
+    flex-wrap: wrap;
   }
-  .intensity-row label {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
+  .control-row > label, .control-label {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    min-width: 150px;
   }
   input[type="range"] {
     flex: 1;
+    min-width: 160px;
     appearance: none;
     -webkit-appearance: none;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border);
+    height: 2px;
+    background: var(--line-strong);
     outline: none;
+    cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
     appearance: none;
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 2px 8px var(--accent-glow);
-    cursor: pointer;
-    transition: transform var(--transition-fast);
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    background: var(--hot);
   }
-  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
   input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border: none;
-    border-radius: 50%;
-    background: var(--accent);
-    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    background: var(--hot);
   }
-  .intensity-row output {
+  input[type="range"]:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--hot); outline-offset: 2px; }
+  input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--hot); outline-offset: 2px; }
+  output#intensityOut {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     font-variant-numeric: tabular-nums;
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    min-width: 42px;
+    font-size: 1.15rem;
+    min-width: 4ch;
     text-align: right;
   }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .seg button {
+    appearance: none;
+    border: none;
+    background: var(--bg-raised);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] {
+    background: var(--ink);
+    color: var(--bg);
+  }
+  .seg button:focus-visible { outline: 2px solid var(--hot); outline-offset: -2px; }
+
+  /* jet legend */
+  .legend { display: flex; align-items: center; gap: 10px; }
+  .legend .steps { display: flex; }
+  .legend .steps span {
+    width: 26px;
+    height: 12px;
+    display: block;
+  }
+  .legend .steps span:first-child { border-radius: 2px 0 0 2px; }
+  .legend .steps span:last-child { border-radius: 0 2px 2px 0; }
+  .legend small {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
   .demo-note {
-    max-width: 560px;
-    margin: 18px auto 0;
+    margin-top: 16px;
     font-size: 0.82rem;
-    color: var(--text-muted);
-    text-align: center;
+    color: var(--ink-3);
+    max-width: 70ch;
   }
 
-  /* feature grid */
+  /* methods table */
+  .methods { margin-top: 28px; border-top: 1px solid var(--line); list-style: none; }
+  .methods li {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 8px 24px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .methods li strong { font-weight: 600; font-size: 0.95rem; }
+  .methods li span { color: var(--ink-2); font-size: 0.9rem; }
+  @media (max-width: 560px) {
+    .methods li { grid-template-columns: 1fr; gap: 2px; }
+  }
+
+  /* features */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
     margin-top: 28px;
   }
-  .grid .card { padding: 22px; }
-  .grid .card:hover { transform: translateY(-3px); border-color: var(--border-hover); }
-  .grid h3 { font-size: 1.02rem; font-weight: 600; margin-bottom: 6px; }
-  .grid p { font-size: 0.9rem; }
+  .grid .cell { background: var(--bg); padding: 22px; }
+  .grid h3 { font-size: 0.98rem; font-weight: 600; margin-bottom: 6px; }
+  .grid p { font-size: 0.88rem; color: var(--ink-2); }
 
-  /* method list */
-  .methods {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
+  /* stack list */
+  .stack-list {
     margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     list-style: none;
   }
-  .methods li {
-    padding: 14px 18px;
-    border-radius: var(--radius-md);
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    font-size: 0.9rem;
+  .stack-list li {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.82rem;
+    padding: 6px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    background: var(--bg-raised);
   }
-  .methods li strong { display: block; font-weight: 600; margin-bottom: 2px; }
-  .methods li span { color: var(--text-muted); font-size: 0.82rem; }
+  .credits { margin-top: 26px; font-size: 0.92rem; color: var(--ink-2); max-width: 66ch; }
 
-  /* chips */
-  .chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
-  .chip {
-    padding: 8px 16px;
-    border-radius: 999px;
-    background: var(--accent-dim);
-    border: 1px solid var(--glass-border);
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: transform var(--transition-fast);
-  }
-  .chip:hover { transform: translateY(-2px); }
-
-  /* footer */
   footer {
-    border-top: 1px solid var(--border);
-    margin-top: 48px;
-    padding: 36px 0 48px;
-    text-align: center;
-    color: var(--text-muted);
+    border-top: 1px solid var(--line);
+    padding: 32px 0 44px;
+    color: var(--ink-3);
     font-size: 0.85rem;
   }
-  footer a { color: var(--text-secondary); text-decoration: none; transition: color var(--transition-fast); }
-  footer a:hover { color: var(--accent); }
+  footer a { color: var(--ink-2); text-decoration: none; }
+  footer a:hover { color: var(--ink); text-decoration: underline; }
 
-  /* reveal animation */
-  .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
-  .reveal.visible { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    html { scroll-behavior: auto; }
+    * { transition: none !important; }
   }
 </style>
 </head>
 <body>
-<div class="glow"></div>
-<main>
-  <div class="container">
 
-    <header class="hero">
-      <span class="badge">Explainable AI · University of Florida</span>
-      <h1>SaliencySlider</h1>
-      <p class="tagline">Upload an image and interactively explore how a pretrained VGG19 network decides what it sees, one saliency region at a time.</p>
+<header class="topbar">
+  <div class="container">
+    <a class="wordmark" href="#">saliency<span class="tick">/</span>slider</a>
+    <nav>
+      <a href="#demo">Demo</a>
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="https://github.com/matheusmaldaner/SaliencySlider">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="container">
+      <p class="kicker">Explainable AI &middot; University of Florida</p>
+      <h1>Which pixels made the network <em>decide</em>?</h1>
+      <p class="lede">SaliencySlider is a Django web app that classifies your image with a pretrained VGG19 and lets you slide through the Grad-CAM evidence behind the prediction, revealing the most influential regions one step at a time.</p>
       <div class="cta-row">
         <a class="btn btn-primary" href="https://github.com/matheusmaldaner/SaliencySlider">View on GitHub</a>
-        <a class="btn btn-glass" href="https://github.com/matheusmaldaner/SaliencySlider/blob/main/SaliencySlider/SaliencySlider.pdf">Read the report</a>
+        <a class="btn" href="https://github.com/matheusmaldaner/SaliencySlider/blob/main/SaliencySlider/SaliencySlider.pdf">Read the report</a>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <section class="reveal" id="what">
-      <div class="section-label">What it does</div>
-      <h2>See what the model is looking at</h2>
-      <p>SaliencySlider is a Django web application built around a simple question: when a convolutional neural network classifies an image, which pixels actually mattered? You upload an image, the app classifies it with a pretrained VGG19, and a slider controls how much of the most influential regions are revealed as a Grad-CAM style heatmap over the original picture.</p>
-    </section>
-
-    <section class="reveal" id="demo">
-      <div class="section-label">Interactive demo</div>
+  <section id="demo">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">01 &middot; Interactive demo</span>
+      </div>
       <h2>Original vs Grad-CAM</h2>
-      <p>Drag the divider to compare the original image with its Grad-CAM overlay, and use the slider below to change the heatmap intensity, the same interaction the app is named after. Warm regions carried the most weight in the prediction.</p>
-      <div class="demo-wrap">
-        <div class="compare" id="compare" aria-label="Before and after comparison of original image and Grad-CAM saliency overlay">
+      <p style="margin-top: 12px;">Drag the divider to compare the original photo with its Grad-CAM saliency map, adjust the heatmap intensity, and switch between the blended overlay and the raw heatmap. Warm regions carried the most weight in the prediction.</p>
+
+      <div class="viewer">
+        <div class="compare" id="compare">
           <img src="img/soccer-original.jpg" alt="Original photo of a soccer ball being kicked on a field" draggable="false">
           <div class="after-layer" id="afterLayer">
             <img src="img/soccer-gradcam.jpg" id="afterImg" alt="Same photo with Grad-CAM heatmap concentrated on the soccer ball" draggable="false">
           </div>
           <div class="divider" id="divider"></div>
-          <div class="handle" id="handle">&#8596;</div>
+          <div class="handle" id="handle" role="slider" tabindex="0" aria-label="Comparison divider position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">&lt;&gt;</div>
           <span class="tag left">Original</span>
-          <span class="tag right">Grad-CAM</span>
+          <span class="tag right" id="rightTag">Grad-CAM</span>
         </div>
-        <div class="intensity-row">
-          <label for="intensity">Heatmap intensity</label>
-          <input type="range" id="intensity" min="0" max="100" value="100">
-          <output id="intensityOut">100%</output>
+        <div class="controls">
+          <div class="control-row">
+            <label for="intensity">Heatmap intensity</label>
+            <input type="range" id="intensity" min="0" max="100" value="100">
+            <output id="intensityOut" for="intensity">100%</output>
+          </div>
+          <div class="control-row">
+            <span class="control-label" id="viewLabel">Saliency view</span>
+            <div class="seg" role="group" aria-labelledby="viewLabel">
+              <button type="button" id="viewOverlay" aria-pressed="true">Overlay</button>
+              <button type="button" id="viewRaw" aria-pressed="false">Raw heatmap</button>
+            </div>
+            <div class="legend" aria-hidden="true">
+              <small>low</small>
+              <div class="steps">
+                <span style="background: var(--jet-1)"></span><span style="background: var(--jet-2)"></span><span style="background: var(--jet-3)"></span><span style="background: var(--jet-4)"></span><span style="background: var(--jet-5)"></span><span style="background: var(--jet-6)"></span>
+              </div>
+              <small>high influence</small>
+            </div>
+          </div>
         </div>
-        <p class="demo-note">Grad-CAM computed with a pretrained VGG19 on the repository's sample image. Top prediction: soccer ball.</p>
       </div>
-    </section>
+      <p class="demo-note">Grad-CAM computed with a pretrained VGG19 on the repository's sample image; top prediction: soccer ball. The raw heatmap view is recovered from the 50/50 overlay blend. Keyboard: focus the divider and use the arrow keys.</p>
+    </div>
+  </section>
 
-    <section class="reveal" id="how">
-      <div class="section-label">How it works</div>
+  <section id="how">
+    <div class="container prose">
+      <div class="section-head">
+        <span class="section-label">02 &middot; How it works</span>
+      </div>
       <h2>Grad-CAM, served by Django</h2>
-      <p>The backend is a Django app that loads a pretrained VGG19 and runs your upload through it. Grad-CAM takes the gradients of the predicted class with respect to the final convolutional layer, weighs the feature maps by those gradients, and produces a coarse heatmap of the regions that pushed the prediction. The app blends that heatmap over the original image at the alpha you pick with the slider, so you can dial the explanation up or down in real time. It ships with a Dockerfile for one-command deployment and a Colab notebook for experimenting without any setup.</p>
+      <p style="margin-top: 12px;">The backend is a Django app that loads a pretrained VGG19 and runs your upload through it. Grad-CAM takes the gradients of the predicted class with respect to the final convolutional layer, weighs the feature maps by those gradients, and produces a coarse heatmap of the regions that pushed the prediction. The app blends that heatmap over the original image at the alpha you pick with the slider, so you can dial the explanation up or down in real time. It ships with a Dockerfile for one-command deployment and a Colab notebook for experimenting without any setup.</p>
       <ul class="methods">
         <li><strong>Grad-CAM</strong><span>class activation mapping using gradients</span></li>
         <li><strong>Grad-CAM++</strong><span>improved localization with weighted gradients</span></li>
@@ -437,83 +478,105 @@
         <li><strong>Integrated Gradients</strong><span>attribution via path integration</span></li>
         <li><strong>Activation Maximization</strong><span>patterns that maximize activations</span></li>
       </ul>
-    </section>
+    </div>
+  </section>
 
-    <section class="reveal" id="features">
-      <div class="section-label">Features</div>
+  <section id="features">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">03 &middot; Features</span>
+      </div>
       <h2>Small app, complete loop</h2>
       <div class="grid">
-        <div class="card">
+        <div class="cell">
           <h3>Image upload</h3>
           <p>Bring your own images and see how the classifier reads them.</p>
         </div>
-        <div class="card">
+        <div class="cell">
           <h3>Interactive saliency</h3>
           <p>A slider controls how many influential regions are visible at once.</p>
         </div>
-        <div class="card">
+        <div class="cell">
           <h3>Six explainability methods</h3>
           <p>Compare gradient-based and gradient-free attributions on the same image.</p>
         </div>
-        <div class="card">
+        <div class="cell">
           <h3>Runs anywhere</h3>
           <p>Docker image for local deployment, Google Colab notebook for zero-setup experiments.</p>
         </div>
       </div>
-    </section>
-
-    <section class="reveal" id="stack">
-      <div class="section-label">Tech stack</div>
-      <h2>Built with</h2>
-      <div class="chips">
-        <span class="chip">Python</span>
-        <span class="chip">Django</span>
-        <span class="chip">VGG19</span>
-        <span class="chip">Grad-CAM</span>
-        <span class="chip">tf-keras-vis</span>
-        <span class="chip">Docker</span>
-        <span class="chip">Google Colab</span>
-      </div>
-      <p style="margin-top: 22px;">Built with Kian Ambrose, Lexie Certo, and Kristian O'Connor for MAS4115 Linear Algebra at the University of Florida.</p>
-    </section>
-
-  </div>
-
-  <footer>
-    <div class="container">
-      <p><a href="https://github.com/matheusmaldaner/SaliencySlider">GitHub</a> &middot; <a href="https://matheus.wiki">matheus.wiki</a></p>
     </div>
-  </footer>
+  </section>
+
+  <section id="stack">
+    <div class="container">
+      <div class="section-head">
+        <span class="section-label">04 &middot; Tech stack</span>
+      </div>
+      <h2>Built with</h2>
+      <ul class="stack-list">
+        <li>Python</li>
+        <li>Django</li>
+        <li>VGG19</li>
+        <li>Grad-CAM</li>
+        <li>tf-keras-vis</li>
+        <li>Docker</li>
+        <li>Google Colab</li>
+      </ul>
+      <p class="credits">Built with Kian Ambrose, Lexie Certo, and Kristian O'Connor for MAS4115 Linear Algebra at the University of Florida.</p>
+    </div>
+  </section>
 </main>
 
+<footer>
+  <div class="container">
+    <p><a href="https://github.com/matheusmaldaner/SaliencySlider">GitHub</a> &middot; <a href="https://matheus.wiki">matheus.wiki</a></p>
+  </div>
+</footer>
+
 <script>
-  // before and after comparison slider
+  // before and after comparison viewer
   (function () {
     var compare = document.getElementById('compare');
     var afterLayer = document.getElementById('afterLayer');
     var divider = document.getElementById('divider');
     var handle = document.getElementById('handle');
     var dragging = false;
+    var pct = 50;
 
-    function setPosition(clientX) {
-      var rect = compare.getBoundingClientRect();
-      var x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      var pct = (x / rect.width) * 100;
+    function render() {
       afterLayer.style.clipPath = 'inset(0 0 0 ' + pct + '%)';
       divider.style.left = pct + '%';
       handle.style.left = pct + '%';
+      handle.setAttribute('aria-valuenow', Math.round(pct));
+    }
+
+    function setFromClientX(clientX) {
+      var rect = compare.getBoundingClientRect();
+      var x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+      pct = (x / rect.width) * 100;
+      render();
     }
 
     compare.addEventListener('pointerdown', function (e) {
       dragging = true;
       compare.setPointerCapture(e.pointerId);
-      setPosition(e.clientX);
+      setFromClientX(e.clientX);
     });
     compare.addEventListener('pointermove', function (e) {
-      if (dragging) setPosition(e.clientX);
+      if (dragging) setFromClientX(e.clientX);
     });
     compare.addEventListener('pointerup', function () { dragging = false; });
     compare.addEventListener('pointercancel', function () { dragging = false; });
+
+    // keyboard support on the divider handle
+    handle.addEventListener('keydown', function (e) {
+      var step = e.shiftKey ? 10 : 2;
+      if (e.key === 'ArrowLeft') { pct = Math.max(0, pct - step); render(); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { pct = Math.min(100, pct + step); render(); e.preventDefault(); }
+      if (e.key === 'Home') { pct = 0; render(); e.preventDefault(); }
+      if (e.key === 'End') { pct = 100; render(); e.preventDefault(); }
+    });
 
     // heatmap intensity slider mirrors the app's core interaction
     var intensity = document.getElementById('intensity');
@@ -523,24 +586,22 @@
       afterImg.style.opacity = intensity.value / 100;
       out.textContent = intensity.value + '%';
     });
-  })();
 
-  // scroll reveal
-  (function () {
-    var sections = document.querySelectorAll('.reveal');
-    if (!('IntersectionObserver' in window)) {
-      sections.forEach(function (s) { s.classList.add('visible'); });
-      return;
+    // overlay vs raw heatmap toggle
+    var btnOverlay = document.getElementById('viewOverlay');
+    var btnRaw = document.getElementById('viewRaw');
+    var rightTag = document.getElementById('rightTag');
+    function setView(raw) {
+      afterImg.src = raw ? 'img/soccer-heatmap.jpg' : 'img/soccer-gradcam.jpg';
+      afterImg.alt = raw
+        ? 'Raw Grad-CAM heatmap for the soccer ball photo, warm regions mark high influence'
+        : 'Same photo with Grad-CAM heatmap concentrated on the soccer ball';
+      rightTag.textContent = raw ? 'Raw heatmap' : 'Grad-CAM';
+      btnOverlay.setAttribute('aria-pressed', String(!raw));
+      btnRaw.setAttribute('aria-pressed', String(raw));
     }
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    sections.forEach(function (s) { observer.observe(s); });
+    btnOverlay.addEventListener('click', function () { setView(false); });
+    btnRaw.addEventListener('click', function () { setView(true); });
   })();
 </script>
 </body>
