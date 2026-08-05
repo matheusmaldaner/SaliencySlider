@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SaliencySlider — see what a CNN sees</title>
 <meta name="description" content="SaliencySlider is a Django web app for interactively exploring Grad-CAM saliency maps of a pretrained VGG19 image classifier.">
+<script>
+  // apply saved theme before first paint
+  (function () {
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    } catch (e) {}
+  })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -36,7 +45,7 @@
     --jet-6: #c2331f;
   }
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-theme="light"]) {
       --color-bg: #111114;
       --color-surface: #1c1c20;
       --color-text: #e8e8ec;
@@ -55,6 +64,25 @@
       --jet-5: #ec9a35;
       --jet-6: #e05238;
     }
+  }
+  :root[data-theme="dark"] {
+    --color-bg: #111114;
+    --color-surface: #1c1c20;
+    --color-text: #e8e8ec;
+    --color-text-muted: #b4b4b8;
+    --color-border: #333338;
+    --color-primary: #10b981;
+    --color-primary-hover: #34d39e;
+    --color-bg-alt: #18181c;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+    --shadow-md: 0 4px 8px rgba(0,0,0,0.5);
+    --btn-secondary-depth: #000000;
+    --jet-1: #3a58b8;
+    --jet-2: #2f8fdb;
+    --jet-3: #3bbfab;
+    --jet-4: #c3d345;
+    --jet-5: #ec9a35;
+    --jet-6: #e05238;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -99,18 +127,37 @@
   .topbar nav { display: flex; gap: 22px; font-size: 0.88rem; font-weight: 500; }
   .topbar nav a { color: var(--color-text-muted); text-decoration: none; transition: color var(--transition); }
   .topbar nav a:hover { color: var(--color-text); }
+  .nav-wrap { display: flex; align-items: center; gap: 22px; }
+
+  /* theme toggle */
+  .theme-toggle {
+    appearance: none;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    background: var(--color-surface);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: border-color var(--transition), color var(--transition);
+  }
+  .theme-toggle:hover { border-color: var(--color-text-muted); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+  .theme-toggle svg { width: 17px; height: 17px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+  }
+  :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
   /* hero */
   .hero { padding: 80px 0 64px; }
-  .kicker {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    margin-bottom: 20px;
-  }
   .hero h1 {
     font-weight: 800;
     font-size: clamp(2.2rem, 5.5vw, 3.2rem);
@@ -155,16 +202,6 @@
   /* sections */
   section { padding: 72px 0; }
   section + section { border-top: 1px solid var(--color-border); }
-  .section-head { margin-bottom: 10px; }
-  .section-label {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-primary);
-    white-space: nowrap;
-  }
   h2 {
     font-weight: 700;
     font-size: clamp(1.4rem, 3vw, 1.6rem);
@@ -431,19 +468,24 @@
 <header class="topbar">
   <div class="container">
     <a class="wordmark" href="#">saliency<span class="tick">/</span>slider</a>
-    <nav>
-      <a href="#demo">Demo</a>
-      <a href="#how">How it works</a>
-      <a href="#features">Features</a>
-      <a href="https://github.com/matheusmaldaner/SaliencySlider">GitHub</a>
-    </nav>
+    <div class="nav-wrap">
+      <nav>
+        <a href="#demo">Demo</a>
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="https://github.com/matheusmaldaner/SaliencySlider">GitHub</a>
+      </nav>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="toggle theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+      </button>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="hero">
     <div class="container">
-      <p class="kicker">Explainable AI &middot; University of Florida</p>
       <h1>Which pixels made the network <em>decide</em>?</h1>
       <p class="lede">SaliencySlider is a Django web app that classifies your image with a pretrained VGG19 and lets you slide through the Grad-CAM evidence behind the prediction, revealing the most influential regions one step at a time.</p>
       <div class="cta-row">
@@ -455,9 +497,6 @@
 
   <section id="demo">
     <div class="container">
-      <div class="section-head">
-        <span class="section-label">01 &middot; Interactive demo</span>
-      </div>
       <h2>Original vs Grad-CAM</h2>
       <p style="margin-top: 12px;">Drag the divider to compare the original photo with its Grad-CAM saliency map, adjust the heatmap intensity, and switch between the blended overlay and the raw heatmap. Warm regions carried the most weight in the prediction.</p>
 
@@ -500,9 +539,6 @@
 
   <section id="how">
     <div class="container prose">
-      <div class="section-head">
-        <span class="section-label">02 &middot; How it works</span>
-      </div>
       <h2>Grad-CAM, served by Django</h2>
       <p style="margin-top: 12px;">The backend is a Django app that loads a pretrained VGG19 and runs your upload through it. Grad-CAM takes the gradients of the predicted class with respect to the final convolutional layer, weighs the feature maps by those gradients, and produces a coarse heatmap of the regions that pushed the prediction. The app blends that heatmap over the original image at the alpha you pick with the slider, so you can dial the explanation up or down in real time. It ships with a Dockerfile for one-command deployment and a Colab notebook for experimenting without any setup.</p>
       <ul class="methods">
@@ -518,9 +554,6 @@
 
   <section id="features">
     <div class="container">
-      <div class="section-head">
-        <span class="section-label">03 &middot; Features</span>
-      </div>
       <h2>Small app, complete loop</h2>
       <div class="grid">
         <div class="cell">
@@ -545,9 +578,6 @@
 
   <section id="stack">
     <div class="container">
-      <div class="section-head">
-        <span class="section-label">04 &middot; Tech stack</span>
-      </div>
       <h2>Built with</h2>
       <ul class="stack-list">
         <li>Python</li>
@@ -637,6 +667,17 @@
     }
     btnOverlay.addEventListener('click', function () { setView(false); });
     btnRaw.addEventListener('click', function () { setView(true); });
+
+    // theme toggle, icon swap is handled by css on data-theme
+    var themeToggle = document.getElementById('themeToggle');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    themeToggle.addEventListener('click', function () {
+      var saved = document.documentElement.dataset.theme;
+      var effectiveDark = saved ? saved === 'dark' : prefersDark.matches;
+      var next = effectiveDark ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem('theme', next); } catch (e) {}
+    });
   })();
 </script>
 </body>
