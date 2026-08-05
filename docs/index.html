@@ -45,27 +45,6 @@
     --jet-5: #e58a1f;
     --jet-6: #c2331f;
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --color-bg: #111114;
-      --color-surface: #1c1c20;
-      --color-text: #e8e8ec;
-      --color-text-muted: #b4b4b8;
-      --color-border: #333338;
-      --color-primary: #10b981;
-      --color-primary-hover: #34d39e;
-      --color-bg-alt: #18181c;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-      --shadow-md: 0 4px 8px rgba(0,0,0,0.5);
-      --btn-secondary-depth: #000000;
-      --jet-1: #3a58b8;
-      --jet-2: #2f8fdb;
-      --jet-3: #3bbfab;
-      --jet-4: #c3d345;
-      --jet-5: #ec9a35;
-      --jet-6: #e05238;
-    }
-  }
   :root[data-theme="dark"] {
     --color-bg: #111114;
     --color-surface: #1c1c20;
@@ -150,10 +129,6 @@
   .theme-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
   .theme-toggle svg { width: 17px; height: 17px; display: block; }
   .theme-toggle .icon-sun { display: none; }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
-    :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
-  }
   :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
   :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
@@ -669,10 +644,9 @@
 
     // theme toggle, icon swap is handled by css on data-theme
     var themeToggle = document.getElementById('themeToggle');
-    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     themeToggle.addEventListener('click', function () {
       var saved = document.documentElement.dataset.theme;
-      var effectiveDark = saved ? saved === 'dark' : prefersDark.matches;
+      var effectiveDark = saved === 'dark';
       var next = effectiveDark ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem('theme', next); } catch (e) {}
