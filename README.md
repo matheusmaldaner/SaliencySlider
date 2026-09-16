@@ -69,3 +69,7 @@ docker run -d -p 8000:8000 saliency-slider-app
 - Kian Ambrose — [GitHub](https://github.com/kianambrose)  
 - Lexie Certo  
 - Kristian O'Connor — [GitHub](https://github.com/kroc99)  
+
+## Thesis reproducibility archive
+
+The retrospective artifact recovery, accuracy review, provenance records, errata, and executable checks for the associated undergraduate thesis are available in the public [Undergraduate Thesis Reproducibility Archive](https://github.com/matheusmaldaner/UndergradThesis).
